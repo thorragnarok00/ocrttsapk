@@ -1,117 +1,172 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+// App.js
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
-  ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
-  useColorScheme,
   View,
-} from 'react-native';
+  Button,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  Clipboard,
+  Alert,
+} from "react-native";
+import * as ImagePicker from 'react-native-image-picker';
+import TextRecognition from 'react-native-text-recognition';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const App = () => {
+  const [image, setImage] = useState<ImagePicker.ImagePickerResponse | null>(null);
+  const [text, setText] = useState<string[] | null>(null);
+  const { width: screenWidth } = Dimensions.get('window');
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  useEffect(() => {
+    // Comment this line to prevent auto launch of image picker on app start
+    // launchImageLibrary();
+  }, []);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+  const launchImageLibrary = () => {
+    const options: ImagePicker.ImageLibraryOptions = {
+      mediaType: 'photo',
+    };
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    ImagePicker.launchImageLibrary(options, (response) => {
+      if (response && !response.didCancel) {
+        setImage(response);
+      }
+    });
+  };
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const launchCamera = () => {
+    const options: ImagePicker.CameraOptions = {
+      mediaType: 'photo',
+    };
+
+    ImagePicker.launchCamera(options, (response) => {
+      if (response && !response.didCancel) {
+        setImage(response);
+      }
+    });
+  };
+
+  const recognizeText = async () => {
+    try {
+      if (image && image.assets && image.assets.length > 0) {
+        const result: string[] = await TextRecognition.recognize(image.assets[0]?.uri!) ?? [];
+        console.log(result);
+        setText(result);
+      } else {
+        setText(null);
+      }
+    } catch (error) {
+      console.error("Error recognizing text:", error);
+      setText(null);
+    }
+  };
+
+  useEffect(() => {
+    recognizeText();
+  }, [image]);
+
+  const getImageHeight = () => {
+    if (image && image.assets && image.assets.length > 0) {
+      const { width, height } = image.assets[0];
+      if (width && height) {
+        return (screenWidth / width) * height;
+      }
+    }
+    return 0;
+  };
+
+  const handleCopyText = () => {
+    if (text && text.length > 0) {
+      const allText = text.join("\n");
+      Clipboard.setString(allText);
+      Alert.alert("Copied to Clipboard", "All text has been copied to the clipboard.");
+    }
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    <SafeAreaView style={styles.container}>
+      <StatusBar />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Text Recognition</Text>
+          {image && (
+            <Image
+              source={{ uri: image.assets?.[0]?.uri ?? undefined }}
+              style={{ width: screenWidth, height: getImageHeight() }}
+            />
+          )}
+          <TouchableOpacity
+            style={styles.recognizedTextContainer}
+            onPress={handleCopyText}
+          >
+            {text && text.length > 0 ? (
+              text.map((recognizedText, index) => (
+                <Text key={index} style={styles.recognizedText}>{recognizedText}</Text>
+              ))
+            ) : (
+              <Text style={styles.noText}>No text recognized</Text>
+            )}
+          </TouchableOpacity>
+          <View style={styles.buttonsContainer}>
+            <Button title="Select Image" onPress={launchImageLibrary} />
+            <View style={styles.takePhotoButtonContainer}>
+              <Button title="Take Photo" onPress={launchCamera} color="#4CAF50" />
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f0f0",
   },
-  sectionTitle: {
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  content: {
+    alignItems: "center",
+    padding: 20,
+  },
+  title: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: "bold",
+    marginBottom: 20,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  recognizedTextContainer: {
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 5,
+    width: "100%",
   },
-  highlight: {
-    fontWeight: '700',
+  recognizedText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  noText: {
+    fontSize: 16,
+    fontStyle: "italic",
+    color: "#555",
+  },
+  buttonsContainer: {
+    marginTop: 20,
+  },
+  takePhotoButtonContainer: {
+    marginTop: 10,
   },
 });
 
