@@ -2,4 +2,4 @@
 
 ## Prelim Exam in Mobile Development 2
 
-This repository contains the source code for an OCR with TTS/Texto-Speech Android application developed using React Native and Android Studio.
+This repository contains the source code for an OCR with TTS/Text-to-Speech Android application developed using React Native and Android Studio.
