@@ -1,5 +1,3 @@
-// App.js
-
 import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
@@ -17,15 +15,21 @@ import {
 } from "react-native";
 import * as ImagePicker from 'react-native-image-picker';
 import TextRecognition from 'react-native-text-recognition';
+import Tts, { Options, AndroidOptions } from 'react-native-tts'; // Import Tts, Options, and AndroidOptions
 
 const App = () => {
   const [image, setImage] = useState<ImagePicker.ImagePickerResponse | null>(null);
   const [text, setText] = useState<string[] | null>(null);
   const { width: screenWidth } = Dimensions.get('window');
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     // Comment this line to prevent auto launch of image picker on app start
     // launchImageLibrary();
+    Tts.addEventListener('tts-finish', handleTTSFinish);
+    return () => {
+      Tts.removeEventListener('tts-finish', handleTTSFinish);
+    };
   }, []);
 
   const launchImageLibrary = () => {
@@ -89,6 +93,29 @@ const App = () => {
     }
   };
 
+  const handleTTSFinish = () => {
+    setIsPlaying(false);
+  };
+
+  const handleTextToSpeech = () => {
+    if (text && text.length > 0) {
+      const allText = text.join("\n");
+      setIsPlaying(true);
+
+      const options: Options = {
+        iosVoiceId: 'com.apple.ttsbundle.Samantha-compact', // Adjust the voiceId as needed
+        rate: 1.0, // Adjust the rate if needed, 1.0 is the default
+        androidParams: {
+          KEY_PARAM_PAN: -1, // Android parameter for panning (-1 to 1)
+          KEY_PARAM_VOLUME: 1, // Android parameter for volume (0 to 1)
+          KEY_PARAM_STREAM: 'STREAM_MUSIC', // Android parameter for stream type
+        },
+      };
+
+      Tts.speak(allText, options);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar />
@@ -117,6 +144,14 @@ const App = () => {
             <Button title="Select Image" onPress={launchImageLibrary} />
             <View style={styles.takePhotoButtonContainer}>
               <Button title="Take Photo" onPress={launchCamera} color="#4CAF50" />
+            </View>
+            <View style={styles.textToSpeechButtonContainer}>
+              <Button
+                title={isPlaying ? "Now Playing..." : "Text to Speech"}
+                onPress={handleTextToSpeech}
+                disabled={isPlaying || !text || text.length === 0}
+                color="#ffc107"
+              />
             </View>
           </View>
         </View>
@@ -167,6 +202,10 @@ const styles = StyleSheet.create({
   },
   takePhotoButtonContainer: {
     marginTop: 10,
+    marginBottom: 10,
+  },
+  textToSpeechButtonContainer: {
+    width: 130, // Fixed width to maintain size
   },
 });
 

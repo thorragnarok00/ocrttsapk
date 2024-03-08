@@ -1,5 +1,5 @@
-# OCR APK (Upload or Take Photo) using React Native and Android Studio
+# OCR with TTS APK (Upload or Take Photo) using React Native and Android Studio
 
-## Activity in Mobile Development 2
+## Prelim Exam in Mobile Development 2
 
-This repository contains the source code for an OCR Android application developed using React Native and Android Studio.
+This repository contains the source code for an OCR with TTS/Texto-Speech Android application developed using React Native and Android Studio.
