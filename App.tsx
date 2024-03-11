@@ -24,19 +24,14 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    // Uncomment this line to automatically launch image picker on app start
+    // Comment this line to prevent auto launch of image picker on app start
     // launchImageLibrary();
-    
-    // Add event listener for TTS finish event
     Tts.addEventListener('tts-finish', handleTTSFinish);
-    
-    // Clean up event listener on component unmount
     return () => {
       Tts.removeEventListener('tts-finish', handleTTSFinish);
     };
   }, []);
 
-  // Function to launch image library
   const launchImageLibrary = () => {
     const options: ImagePicker.ImageLibraryOptions = {
       mediaType: 'photo',
@@ -49,7 +44,6 @@ const App = () => {
     });
   };
 
-  // Function to launch camera
   const launchCamera = () => {
     const options: ImagePicker.CameraOptions = {
       mediaType: 'photo',
@@ -62,7 +56,6 @@ const App = () => {
     });
   };
 
-  // Function to recognize text from image
   const recognizeText = async () => {
     try {
       if (image && image.assets && image.assets.length > 0) {
@@ -79,11 +72,9 @@ const App = () => {
   };
 
   useEffect(() => {
-    // Call recognizeText when image changes
     recognizeText();
   }, [image]);
 
-  // Function to calculate image height
   const getImageHeight = () => {
     if (image && image.assets && image.assets.length > 0) {
       const { width, height } = image.assets[0];
@@ -94,7 +85,6 @@ const App = () => {
     return 0;
   };
 
-  // Function to handle copying recognized text to clipboard
   const handleCopyText = () => {
     if (text && text.length > 0) {
       const allText = text.join("\n");
@@ -103,12 +93,10 @@ const App = () => {
     }
   };
 
-  // Function to handle TTS finish event
   const handleTTSFinish = () => {
     setIsPlaying(false);
   };
 
-  // Function to handle text to speech
   const handleTextToSpeech = () => {
     if (text && text.length > 0) {
       const allText = text.join("\n");
